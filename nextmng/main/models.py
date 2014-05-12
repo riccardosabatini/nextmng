@@ -184,7 +184,7 @@ class Experiment(ValidateModelMixin, models.Model):
             
             pystmark.send(message, api_key=settings.POSTMASTER['key'])
             
-            logger.error("Mail sent to the recipient {}".format(self.subject.mail))
+            logger.info("Mail sent to the recipient {}".format(self.subject.mail))
             
             return True
         

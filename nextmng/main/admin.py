@@ -4,17 +4,26 @@ from ..common import logger
 
 
 # Register your models here.
+def resend_pdf(modeladmin, request, queryset):
+    for subject in queryset:
+        subject.experiment.send_pdf_by_mail()
+resend_pdf.short_description = "Resend the PDF"
+
+def regenerate_pdf(modeladmin, request, queryset):
+    for subject in queryset:
+        subject.experiment.generate_pdf()
+regenerate_pdf.short_description = "Rebuild the PDF"
 
 class ExperimentInline(admin.StackedInline):
     
     model           = models.Experiment
     readonly_fields = ['pdf_file', 'm_objects', 'm_vegetables', 'm_sweets', 'm_fruits', 'm_stages', 'm_positives', 'm_salties']
     
-    
 class TestSubjectAdmin(admin.ModelAdmin):
     
     list_display = ['name', 'mail', 'code', 'experiment']
-    inlines = (ExperimentInline, )
+    inlines      = [ExperimentInline]
+    actions      = [resend_pdf, regenerate_pdf]
     
     def save_model(self, request, obj, form, change):
         

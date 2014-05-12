@@ -9,6 +9,8 @@
 .metadata/
 .secret/
 .media/
+.assets/
+.renv.sh
 node_modules/
 
 .DS_Store

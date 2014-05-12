@@ -43,6 +43,56 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 )
 
+# A sample logging configuration. The only tangible logging
+# performed by this configuration is to send an email to
+# the site admins on every HTTP 500 error when DEBUG=False.
+# See http://docs.djangoproject.com/en/dev/topics/logging for
+# more details on how to customize your logging configuration.
+CONSOLE_LOG_LEVEL = os.environ.get('LOG_LEVEL', 'INFO')
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'filters': {
+        'require_debug_false': {
+            '()': 'django.utils.log.RequireDebugFalse'
+        }
+    },
+    'formatters': {
+        'logentries': {
+            'format': 'DJ %(levelname)s %(name)s %(module)s: %(message)s',
+            },
+        },
+    'handlers': {
+        'mail_admins': {
+            'level': 'ERROR',
+            'filters': ['require_debug_false'],
+            'class': 'django.utils.log.AdminEmailHandler'
+        },
+        'console': {
+            'level': CONSOLE_LOG_LEVEL,
+            'class': 'logging.StreamHandler',
+            'formatter': 'logentries',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'WARNING',
+        },
+        'django.request': {
+            'handlers': ['mail_admins'],
+            'level': 'ERROR',
+            'propagate': True,
+        },
+        'nextmng': {
+            'handlers': ['console'],
+            'level': CONSOLE_LOG_LEVEL,
+        },
+    }
+}
+
+
 ROOT_URLCONF = 'nextmng.urls'
 
 WSGI_APPLICATION = 'nextmng.wsgi.application'
@@ -73,4 +123,16 @@ USE_TZ = True
  
 # AngularJS will complains is we append slashes
 APPEND_SLASH = False  
+
+# List of finder classes that know how to find static files in
+# various locations.
+STATICFILES_FINDERS = (
+    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+    #'django.contrib.staticfiles.finders.FileSystemFinder',
+)
+
+# STATICFILES_DIRS = (
+#     # XXX uncomment this when re-enabilng the mobile app
+#     ('static', BASE_DIR, '..', '..')),
+# )
 

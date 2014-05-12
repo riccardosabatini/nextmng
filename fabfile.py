@@ -51,7 +51,18 @@ def shell(env="local"):
 def runserver(env="local"):
     
     if env=="local":
-        local(".secret/config_local.sh python manage.py runserver")
+        local(".secret/config_local.sh foreman start -f Procfile.local")
+
+
+@task
+def collect(env="local", test=True):
+    
+    import os
+    
+    if env=="local":
+        local(".secret/config_local.sh python manage.py collectstatic {} --noinput".format("--dry-run" if booleanize(test) else ""))
+    elif env=="s3":
+        local(".secret/config_local_s3.sh python manage.py collectstatic {} --noinput".format("--dry-run" if booleanize(test) else ""))
             
 ########################################################################
 # Installation commands
@@ -101,8 +112,67 @@ def create_base_dirs():
         os.makedirs(eipscheduler_log_dir)
          
     
+########################################################################
+# Heroku commands
+########################################################################
 
+@task
+def heroku(action, app, branch="master", create=False):
+    
+    if action.lower()=="init":
+        heroku_init(app, branch=branch, create=create)
+    
+    elif action.lower()=="conf":
+        heroku_conf(app, branch=branch)
         
+    elif action.lower()=="install":
+        heroku_install(app)
+    
+    elif action.lower()=="push":
+        heroku_push(app, branch=branch)
+    
+    
+@task
+def heroku_init(app, branch="master", create=False):
+
+    if booleanize(create):
+        local("heroku apps:create {app} -s cedar".format(app=app, branch=branch))
+        local("git remote add {app} git@heroku.com:{app}.git".format(app=app))
+        
+    heroku_conf(app)
+    heroku_push(app, branch=branch)
+    heroku_install(app)
+    
+@task
+def heroku_push(app, branch="master"):
+    
+    local("git push {app} {branch}".format(app=app, branch=branch))
+
+@task
+def heroku_install(app):
+         
+    local("heroku run python manage.py syncdb --app {app}".format(app=app))
+    local("heroku run python manage.py migrate --all --app {app}".format(app=app))
+    
+@task
+def heroku_conf(app):
+    
+    
+    with open(".secret/config_common.sh") as f:
+        _common = f.readlines()
+    
+    _confs = {}
+    
+    for l in _common:
+        if l.strip().startswith("export"):
+            _parts = [i.strip().replace('\\"',"__VERYSTRAGE__").replace('"','').replace("__VERYSTRAGE__",'"').decode('string_escape') for i in l[l.index("export")+len("export"):].split("=")]
+            _confs[_parts[0]] = _parts[1] 
+    
+    for k in _confs.keys():
+         local("heroku config:set {0}={1} --app {2}".format(k, _confs[k], app))
+    
+    local("heroku config --app {0}".format(app))
+    
 ########################################################################
 # Daemon commands
 ########################################################################
@@ -139,4 +209,24 @@ def db_fill_demo(env="local"):
         print "Installing demo sensors ..."
         local(".secret/config_local.sh python manage.py fill_demo")
     
-    
+
+########################################################################
+# Utility funcitons for files
+########################################################################
+
+def booleanize(value):
+    """Return value as a boolean."""
+
+    true_values = ("yes", "true", "1", "y")
+    false_values = ("no", "false", "0", "n")
+
+    if isinstance(value, bool):
+        return value
+
+    if value.lower() in true_values:
+        return True
+
+    elif value.lower() in false_values:
+        return False
+
+    raise TypeError("Cannot booleanize ambiguous value '%s'" % value)

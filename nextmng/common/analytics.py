@@ -1,5 +1,5 @@
-import numpy as np
 from . import logger
+from numpy import average, array, std, arange
 
 def compute_zscores(fname):
     
@@ -42,8 +42,8 @@ def compute_zscores(fname):
         if _new_group and _parts[2]<0:
             logger.debug("Trigger ended", _parts[2])
             
-            _arr = np.array(_group)
-            _avg = np.average(_arr)
+            _arr = array(_group)
+            _avg = average(_arr)
     
             logger.debug("Group", _arr)
             logger.debug("Average", _avg)
@@ -58,8 +58,8 @@ def compute_zscores(fname):
             _group.append(_parts[1])
     
     
-    _mean    = np.average(_averages)
-    _std     = np.std(_averages)
+    _mean    = average(_averages)
+    _std     = std(_averages)
     _zscores = (_averages-_mean)/_std
     
     
@@ -111,7 +111,6 @@ def generate_pdf(experiment):
     # This is a demo of creating a pdf file with several pages.
     
     import datetime
-    import numpy as np
     from matplotlib.backends.backend_pdf import PdfPages
     import matplotlib.pyplot as plt
     from os.path import join
@@ -143,7 +142,7 @@ def generate_pdf(experiment):
     logger.info("_std {}".format(_std))
     logger.info("_exp {}".format(_exp))
     
-    ind = np.arange(len(_avg))  # the x locations for the groups
+    ind = arange(len(_avg))  # the x locations for the groups
     width = 0.35       # the width of the bars
     
     fig, ax = plt.subplots()
@@ -157,15 +156,6 @@ def generate_pdf(experiment):
     ax.set_xticklabels( ('Objects', 'Veggies', 'Sweets', 'Fruits', 'Stages', 'Positives', 'Salts') )
     
     ax.legend( (rects1[0], rects2[0]), ('All', experiment.subject.name) )
-    
-    def autolabel(rects):
-        # attach some text labels
-        for rect in rects:
-            height = rect.get_height()
-            ax.text(rect.get_x()+rect.get_width()/2., 1.05*height, '%d'%int(height), ha='center', va='bottom')
-    
-    autolabel(rects1)
-    autolabel(rects2)
     
     plt.savefig(fname)
         

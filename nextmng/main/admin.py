@@ -45,7 +45,8 @@ class TestSubjectAdmin(admin.ModelAdmin):
 
 class AggregationAdmin(admin.ModelAdmin):
 
-    list_display = ['operation']
+    list_display    = ['operation']
+    readonly_fields = ['m_objects', 'm_vegetables', 'm_sweets', 'm_fruits', 'm_stages', 'm_positives', 'm_salties']
     
 admin.site.register(models.TestSubject, TestSubjectAdmin)
 admin.site.register(models.Aggregation, AggregationAdmin)

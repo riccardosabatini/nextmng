@@ -61,7 +61,7 @@ CACHES = {
 #             }
 
 POSTMASTER = {
-            'key': os.environ.get('POSTMASTER_KEY'),
-            'sender': os.environ.get('POSTMASTER_SENDER'),
+            'key': os.environ.get('POSTMARK_API_KEY'),
+            'sender': os.environ.get('POSTMARK_SENDER'),
             }
 

@@ -172,6 +172,7 @@ class Experiment(ValidateModelMixin, models.Model):
 
         import pystmark
         from django.conf import settings
+        from django.core.files.storage import default_storage as storage
         
         try:
             
@@ -181,11 +182,14 @@ class Experiment(ValidateModelMixin, models.Model):
                                        text='Dear {},\nwe\'re happy to send you the resuts for the experiment you took part in WiredNext 2014 at the FoodCAST stand.\n\nBest regard,\nThe FoodCAST Team'.format(self.subject.name))
 
             # Attach using filename
-            message.attach_file(self.pdf_file.path)
+            fh = storage.open(self.pdf_file.name, "r")
+            
+            message.attach_binary(fh.read(), self.pdf_file.name.split("/")[-1])
             
             pystmark.send(message, api_key=settings.POSTMASTER['key'])
             
             logger.info("Mail sent to the recipient {}".format(self.subject.mail))
+            fh.close()
             
             return True
         

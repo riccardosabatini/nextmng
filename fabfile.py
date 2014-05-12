@@ -59,10 +59,13 @@ def shell(env="local"):
 
 
 @task
-def runserver(env="local"):
+def runserver(env="local", type="django"):
     
     if env=="local":
-        local(".secret/config_local.sh foreman start -f Procfile.local")
+        if type.startswith("dj"):
+            local(".secret/config_local.sh python manage.py runserver")
+        elif type.startswith("gu"):
+            local(".secret/config_local.sh foreman start -f Procfile.local")
 
 
 @task

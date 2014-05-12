@@ -1,0 +1,122 @@
+<!DOCTYPE html> 
+<html>
+	<head>
+		<title>FoodCAST @WiredNext</title>
+		
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+		
+		{% load staticfiles %}
+		
+		<link rel="stylesheet" href="{% static 'main/css/demo.css' %}">
+		<link rel="stylesheet" href="{% static 'main/css/sky-forms.css' %}">
+		
+		<!--[if lt IE 9]>
+			<link rel="stylesheet" href="{% static 'main/css/sky-forms-ie8.css' %}">
+		<![endif]-->
+		
+		<!--[if lt IE 10]>
+			<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+			<link rel="stylesheet" href="{% static 'main/js/jquery.placeholder.min.js' %}">
+		<![endif]-->		
+		<!--[if lt IE 9]>
+			<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+			<link rel="stylesheet" href="{% static 'main/js/sky-forms-ie8.js' %}">
+		<![endif]-->
+	</head>
+	<body class="bg-cyan">
+		<div class="body body-s">
+		
+				
+			{% if id_assigned %}
+			<form  class="sky-form" action="{% url "main:home" %}" method="get">
+				
+				{% csrf_token %}
+					
+				<header>Neuroscience @FoodCAST</header>
+				
+				<fieldset>					
+					<section>
+						<label class="input">
+							<p align="center">Your experiment number is:</p>
+							<p align="center" class="result">{{id_assigned}}</p>
+						</label>
+					</section>
+					
+				</fieldset>
+				
+				<footer>
+					<button type="submit" class="button">Back</button>
+				</footer>
+				
+			{% else %}
+			
+			<form  class="sky-form" action="{% url "main:home" %}" method="post" enctype="multipart/form-data">
+				
+				{% csrf_token %}
+				
+				<header>Neuroscience @FoodCAST</header>
+				
+				<fieldset>					
+					<section>
+						<label class="input {% if form.name.errors %}state-error{% endif %}">
+							<i class="icon-append icon-user"></i>
+							<input type="text" placeholder="Name, Surname or Nickname" name="name" value="{{ form.name.value|default_if_none:"" }}">
+							<b class="tooltip tooltip-bottom-right">Only latin characters and numbers</b>
+						</label>
+						{% if form.name.errors %}<div class="note note-error">{{ form.name.errors }}</div>{% endif %}
+					</section>
+					
+					<section>
+						<label class="input {% if form.mail.errors %}state-error{% endif %}">
+							<i class="icon-append icon-envelope-alt"></i>
+							<input type="text" placeholder="Email address"  name="mail"  value="{{ form.mail.value|default_if_none:"" }}">
+							<b class="tooltip tooltip-bottom-right">Just if you like</b>
+						</label>
+						{% if form.mail.errors %}<div class="note note-error">{{ form.mail.errors }}</div>{% endif %}
+					</section>
+					
+				</fieldset>
+					
+				<fieldset>
+					<section>
+						<label class="select {% if form.gender.errors %}state-error{% endif %}">
+							<select name="gender">
+								<option value="-1" {% if form.gender.value == "-1" %} selected disabled {% endif %}>Gender</option>
+								<option value="0" {% if form.gender.value == "0" %} selected {% endif %}>Male</option>
+								<option value="1" {% if form.gender.value == "1" %} selected {% endif %}>Female</option>
+							</select>
+							<i></i>
+						</label>
+						{% if form.gender.errors %}<div class="note note-error">{{ form.gender.errors }}</div>{% endif %}
+					</section>
+
+					<section>
+						<label class="select {% if form.age.errors %}state-error{% endif %}">
+							<select name="age">
+								<option value="-1" {% if form.age.value == "-1" %} selected disabled {% endif %}>Age</option>
+								<option value="0" {% if form.age.value == "0" %} selected {% endif %}>Proud to be young (<18)</option>
+								<option value="1" {% if form.age.value == "1" %} selected {% endif %}>Getting older (18 - 35)</option>
+								<option value="2" {% if form.age.value == "2" %} selected {% endif %}>Already adult (35 - 60)</option>
+								<option value="3" {% if form.age.value == "3" %} selected {% endif %}>Finally senior (>60)</option>
+							</select>
+							<i></i>
+						</label>
+						{% if form.gender.errors %}<div class="note note-error">{{ form.age.errors }}</div>{% endif %}
+					</section>
+					
+					<section>
+						<label class="checkbox"><input type="checkbox" name="send_to" {% if form.send_to.value %} checked {% endif %} ><i></i>I want to receive results by mail</label>
+					</section>
+				</fieldset>
+				<footer>
+					<button type="submit" class="button">Register</button>
+				</footer>
+				
+			{% endif %}
+				
+			</form>
+			
+		</div>
+	</body>
+</html>

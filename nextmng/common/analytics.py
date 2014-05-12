@@ -118,9 +118,6 @@ def generate_pdf(experiment):
     from ..main.models import Experiment, Aggregation
     from django.core.files.storage import default_storage as storage
     
-    fname = experiment.subject.code+".pdf"
-    fh    = storage.open(fname, "w")
-    
     logger.info("Generating PDF file")
     
     # Create the PdfPages object to which we will save the pages:
@@ -157,6 +154,9 @@ def generate_pdf(experiment):
     
     ax.legend( (rects1[0], rects2[0]), ('All', experiment.subject.name) )
     
+    # Storing with the
+    fname = experiment.subject.code+".png"
+    fh    = storage.open(fname, "w")
     plt.savefig(fh)
     fh.close()
     

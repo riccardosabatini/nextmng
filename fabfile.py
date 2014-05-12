@@ -20,21 +20,32 @@ BACKUP_PATH = os.path.join(BACKUP_DIR, 'pgdump.db')
 # NOTE: this has to match with the db specified in local settings.
 DB_CLUSTER = '9.2/main'
 
+########################################################################
+# Utility funcitons for files
+########################################################################
+
+def booleanize(value):
+    """Return value as a boolean."""
+
+    true_values = ("yes", "true", "1", "y")
+    false_values = ("no", "false", "0", "n")
+
+    if isinstance(value, bool):
+        return value
+
+    if value.lower() in true_values:
+        return True
+
+    elif value.lower() in false_values:
+        return False
+
+    raise TypeError("Cannot booleanize ambiguous value '%s'" % value)
 
 ########################################################################
 # Parameters
 ########################################################################
 
 # For the daemon, to be hard-coded when ok
-daemon_subdir    = "daemon"
-log_dir          = "daemon/log"
-
-eipscheduler_dir        = os.path.join(os.path.dirname(os.path.dirname(nxt.__file__)), "serverconf") 
-eipscheduler_daemon_dir = os.path.join(eipscheduler_dir,daemon_subdir)
-eipscheduler_log_dir    = os.path.join(eipscheduler_dir,log_dir)
-eipscheduler_user       = getpass.getuser()
-eipscheduler_daemon_conf_file = "eipscheduler_daemon.conf"
-eipscheduler_module_dir = os.path.dirname(os.path.dirname(nxt.__file__))
 
 ########################################################################
 # Utility commands
@@ -55,14 +66,18 @@ def runserver(env="local"):
 
 
 @task
-def collect(env="local", test=True):
+def collect(env="local", test=True, clear=False):
     
     import os
     
+    _args = "--noinput"
+    if booleanize(test): _args = _args+" --dry-run"
+    if booleanize(clear): _args = _args+" -c"
+    
     if env=="local":
-        local(".secret/config_local.sh python manage.py collectstatic {} --noinput".format("--dry-run" if booleanize(test) else ""))
+        local(".secret/config_local.sh python manage.py collectstatic {} ".format(_args))
     elif env=="s3":
-        local(".secret/config_local_s3.sh python manage.py collectstatic {} --noinput".format("--dry-run" if booleanize(test) else ""))
+        local(".secret/config_local_s3.sh python manage.py collectstatic {} ".format(_args))
             
 ########################################################################
 # Installation commands
@@ -74,7 +89,6 @@ def install(env="local"):
     if env=="local":
         local(".secret/config_local.sh python manage.py syncdb")
         local(".secret/config_local.sh python manage.py migrate")
-        setup_files(env=env)
 
 @task
 def test(env="local"):
@@ -94,23 +108,6 @@ def migrate(app, env="local"):
         local(".secret/config_local.sh python manage.py migrate "+app+"")
             
             
-@task
-def setup_files(env="local"):
-
-    create_base_dirs()
-    
-    
-def create_base_dirs():
-    
-    if (not os.path.isdir(eipscheduler_dir)):
-        os.makedirs(eipscheduler_dir)
-     
-    if (not os.path.isdir(eipscheduler_daemon_dir)):
-        os.makedirs(eipscheduler_daemon_dir)
-       
-    if (not os.path.isdir(eipscheduler_log_dir)):
-        os.makedirs(eipscheduler_log_dir)
-         
     
 ########################################################################
 # Heroku commands
@@ -128,9 +125,14 @@ def heroku(action, app, branch="master", create=False):
     elif action.lower()=="install":
         heroku_install(app)
     
+    elif action.lower()=="migrate":
+        heroku_migrate(app)
+        
     elif action.lower()=="push":
         heroku_push(app, branch=branch)
     
+    elif action.lower()=="logs":
+        heroku_logs(app)
     
 @task
 def heroku_init(app, branch="master", create=False):
@@ -152,8 +154,17 @@ def heroku_push(app, branch="master"):
 def heroku_install(app):
          
     local("heroku run python manage.py syncdb --app {app}".format(app=app))
-    local("heroku run python manage.py migrate --all --app {app}".format(app=app))
+    heroku_migrate(app)
+
+@task
+def heroku_logs(app):
+         
+    local("heroku logs --app {app}".format(app=app))
     
+@task    
+def heroku_migrate(app):
+    local("heroku run python manage.py migrate --all --app {app}".format(app=app))
+        
 @task
 def heroku_conf(app):
     
@@ -212,23 +223,3 @@ def db_fill_demo(env="local"):
         local(".secret/config_local.sh python manage.py fill_demo")
     
 
-########################################################################
-# Utility funcitons for files
-########################################################################
-
-def booleanize(value):
-    """Return value as a boolean."""
-
-    true_values = ("yes", "true", "1", "y")
-    false_values = ("no", "false", "0", "n")
-
-    if isinstance(value, bool):
-        return value
-
-    if value.lower() in true_values:
-        return True
-
-    elif value.lower() in false_values:
-        return False
-
-    raise TypeError("Cannot booleanize ambiguous value '%s'" % value)

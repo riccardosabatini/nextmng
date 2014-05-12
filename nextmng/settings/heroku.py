@@ -55,21 +55,22 @@ AWS_STORAGE_DOMAIN      = os.environ.get('AWS_STORAGE_DOMAIN')
 
 # allows conditional upload (needs dateutil)
 AWS_PRELOAD_METADATA = True
+AWS_QUERYSTRING_AUTH = False
 
 # ------------------------------------
 #    Static files
 # ------------------------------------
 
-DEFAULT_FILE_STORAGE = 'storages.backends.s3boto.S3BotoStorage'
-STATICFILES_STORAGE  = 'storages.backends.s3boto.S3BotoStorage'
+DEFAULT_FILE_STORAGE = 'nextmng.common.s3utils.MediaStorage'
+STATICFILES_STORAGE  = 'nextmng.common.s3utils.StaticStorage'
 
 # media files (images uploaded by users)
-AWS_MEDIA_LOCATION   = 'media' # this only impacts unversioned storage
-MEDIA_URL = 'https://%s.s3.amazonaws.com/%s/' % (AWS_STORAGE_BUCKET_NAME,AWS_MEDIA_LOCATION)
+BOTO_MEDIA_LOCATION   = 'media' # this only impacts unversioned storage
+MEDIA_URL = 'https://%s.s3.amazonaws.com/%s/' % (AWS_STORAGE_BUCKET_NAME,BOTO_MEDIA_LOCATION)
 
 # static assets
-AWS_STATIC_LOCATION   = 'static' # this only impacts unversioned storagee
-STATIC_URL = 'https://%s.s3.amazonaws.com/%s/' % (AWS_STORAGE_BUCKET_NAME,AWS_STATIC_LOCATION)
+BOTO_STATIC_LOCATION   = 'static' # this only impacts unversioned storagee
+STATIC_URL = 'https://%s.s3.amazonaws.com/%s/' % (AWS_STORAGE_BUCKET_NAME,BOTO_MEDIA_LOCATION)
 
 
 # SENDGRID = {

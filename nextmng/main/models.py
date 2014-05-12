@@ -156,19 +156,44 @@ class Experiment(ValidateModelMixin, models.Model):
     
     def send_pdf_by_mail(self):
     
-        import sendgrid
+
+#         import sendgrid
+#         from django.conf import settings
+#         sg = sendgrid.SendGridClient(settings.SENDGRID['user'], settings.SENDGRID['pass'])
+#             
+#         message = sendgrid.Mail()
+#         message.add_to(self.subject.mail)
+#         message.set_subject('FoodCAST @WiredNext - Results')
+#         message.set_text('Salve {}, siamo felici di inviarti il risultato del tuo esperimento. FoodCAST Team')
+#         message.set_from('FoodCAST <foodcast@sissa.it>')
+#         message.add_attachment('results.pdf', self.pdf_file.path)
+#         status, msg = sg.send(message)
+
+        import pystmark
         from django.conf import settings
-        sg = sendgrid.SendGridClient(settings.SENDGRID['user'], settings.SENDGRID['pass'])
-            
-        message = sendgrid.Mail()
-        message.add_to(self.subject.mail)
-        message.set_subject('FoodCAST @WiredNext - Results')
-        message.set_text('Salve {}, siamo felici di inviarti il risultato del tuo esperimento. FoodCAST Team')
-        message.set_from('FoodCAST <foodcast@sissa.it>')
-        message.add_attachment('results.pdf', self.pdf_file.path)
-        status, msg = sg.send(message)
         
-             
+        try:
+            
+            message = pystmark.Message(sender=settings.POSTMASTER['sender'],
+                                       to=self.subject.mail,
+                                       subject='FoodCAST Neuroscience Experiment result',
+                                       text='Dear {},\nwe\'re happy to send you the resuts for the experiment you took part in WiredNext 2014 at the FoodCAST stand.\n\nBest regard,\nThe FoodCAST Team'.format(self.subject.name))
+
+            # Attach using filename
+            message.attach_file(self.pdf_file.path)
+            
+            pystmark.send(message, api_key=settings.POSTMASTER['key'])
+            
+            logger.error("Mail sent to the recipient {}".format(self.subject.mail))
+            
+            return True
+        
+        except Exception as e:
+            
+            logger.error("Cannot send a mail to the recipient {}: {}".format(self.subject.mail, e))
+            return False
+        
+        
 #-------------------------------------
 #         Lock
 #-------------------------------------
@@ -179,4 +204,5 @@ class DbLock(models.Model):
     creation   = models.DateTimeField(auto_now_add=True, editable=False)
     timeout    = models.IntegerField(editable=False)
     owner      = models.CharField(max_length=255, blank=False)
-            
+    
+    

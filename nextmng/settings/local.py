@@ -82,8 +82,12 @@ CACHES = {
         }
     }
 
-SENDGRID = {
-            'user': os.environ.get('SENDGRID_USER'),
-            'pass': os.environ.get('SENDGRID_PASS'),
-            }
+# SENDGRID = {
+#             'user': os.environ.get('SENDGRID_USER'),
+#             'pass': os.environ.get('SENDGRID_PASS'),
+#             }
 
+POSTMASTER = {
+            'key': os.environ.get('POSTMASTER_KEY'),
+            'sender': os.environ.get('POSTMASTER_SENDER'),
+            }

@@ -10,8 +10,8 @@ from fabric.contrib import django
 # ------------------------------
 #   Fabric management functions
 # ------------------------------
-
-django.project('nextmng')
+DJANGO_PROJECT = 'nextmng'
+django.project(DJANGO_PROJECT)
 
 BACKUP_DIR = './backups'
 BACKUP_PATH = os.path.join(BACKUP_DIR, 'pgdump.db')
@@ -170,6 +170,8 @@ def heroku_conf(app):
     
     for k in _confs.keys():
          local("heroku config:set {0}={1} --app {2}".format(k, _confs[k], app))
+    
+    local("heroku config:set DJANGO_SETTINGS_MODULE={proj}.settings.heroku --app {app}".format(proj=DJANGO_PROJECT, app=app))
     
     local("heroku config --app {0}".format(app))
     

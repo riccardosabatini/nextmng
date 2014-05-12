@@ -38,3 +38,4 @@ tornado==3.2.1
 wsgiref==0.1.2
 pylibmc==1.2.3
 django-pylibmc==0.5
+pystmark==0.4.4

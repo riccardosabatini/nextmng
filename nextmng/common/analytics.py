@@ -1,11 +1,10 @@
 from . import logger
 from numpy import average, array, std, arange
 
-def compute_zscores(fname):
+def compute_zscores(f):
     
     content = None
-    with open(fname) as f:
-        content = f.readlines()
+    content = f.readlines()
     
     # Get first line
     f_line = -1
@@ -117,11 +116,12 @@ def generate_pdf(experiment):
     from django.conf import settings
     from django.db.models import Avg, StdDev
     from ..main.models import Experiment, Aggregation
+    from django.core.files.storage import default_storage as storage
     
+    fname = experiment.subject.code+".pdf"
+    fh    = storage.open(fname, "w")
     
-    fname = settings.MEDIA_ROOT+"/files/"+experiment.subject.code+".pdf"
-    
-    logger.info("Generating PDF file at {}".format(fname))
+    logger.info("Generating PDF file")
     
     # Create the PdfPages object to which we will save the pages:
     # The with statement makes sure that the PdfPages object is closed properly at
@@ -157,8 +157,9 @@ def generate_pdf(experiment):
     
     ax.legend( (rects1[0], rects2[0]), ('All', experiment.subject.name) )
     
-    plt.savefig(fname)
-        
+    plt.savefig(fh)
+    fh.close()
+    
     return fname
 
 

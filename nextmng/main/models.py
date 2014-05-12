@@ -116,12 +116,13 @@ class Experiment(ValidateModelMixin, models.Model):
     def compute_values(self):
         
         from django.conf import settings
-        
-        fname = self.file.path
+        from django.core.files.storage import default_storage as storage
         
         try:
             
-            z_scores = compute_zscores(fname)
+            fh = storage.open(self.file.name, "r")
+            z_scores = compute_zscores(fh)
+            fh.close()
             
             self.m_objects    = z_scores[0] if len(z_scores)>=1 else None
             self.m_vegetables = z_scores[1] if len(z_scores)>=2 else None

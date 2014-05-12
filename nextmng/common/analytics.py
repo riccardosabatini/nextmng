@@ -22,30 +22,30 @@ def compute_zscores(f):
     for i in range(f_line, len(content)):
         
         if len(content[i].strip())==0:
-            logger.debug("Empty line")
+            #logger.debug("Empty line")
             continue
     
         try:
             _parts = [float(n) for n in content[i].split(",")]
         except:
-            logger.debug("Error parsing line -{}-".format(content[i]))
+            #logger.debug("Error parsing line -{}-".format(content[i]))
             continue
     
         if not len(_parts) == 3:
             continue
     
         if _parts[2] > 0:
-            logger.debug("Trigger arrived", _parts[2])
+            #logger.debug("Trigger arrived: {}".format(_parts[2]))
             _new_group = True
     
         if _new_group and _parts[2]<0:
-            logger.debug("Trigger ended", _parts[2])
+            #logger.debug("Trigger ended: {}".format(_parts[2]))
             
             _arr = array(_group)
             _avg = average(_arr)
     
-            logger.debug("Group", _arr)
-            logger.debug("Average", _avg)
+            #logger.debug("Group: {}".format(_arr))
+            #logger.debug("Average: {}".format(_avg))
     
             _groups.append(_arr)
             _averages.append(_avg)

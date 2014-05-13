@@ -1,9 +1,4 @@
 import os
-import subprocess
-import re
-import nextmng as nxt
-import getpass
-
 from fabric.api import local, task, abort, puts, settings
 from fabric.contrib import django
 
@@ -52,20 +47,18 @@ def booleanize(value):
 ########################################################################
 
 @task
-def shell(env="local"):
+def shell():
     
-    if env=="local":
-        local(".secret/config_local.sh python manage.py shell")
+    local("./run_in_env.sh .secret/local.env python manage.py shell")
 
 
 @task
-def runserver(env="local", type="django"):
+def runserver(type="django"):
     
-    if env=="local":
-        if type.startswith("dj"):
-            local(".secret/config_local.sh python manage.py runserver")
-        elif type.startswith("gu"):
-            local(".secret/config_local.sh foreman start -f Procfile.local")
+    if type.startswith("dj"):
+        local("./run_in_env.sh .secret/local.env python manage.py runserver")
+    elif type.startswith("gu"):
+        local("./run_in_env.sh .secret/local.env foreman start -f Procfile.local")
 
 
 @task
@@ -77,38 +70,32 @@ def collect(env="local", test=True, clear=False):
     if booleanize(test): _args = _args+" --dry-run"
     if booleanize(clear): _args = _args+" -c"
     
-    if env=="local":
-        local(".secret/config_local.sh python manage.py collectstatic {} ".format(_args))
-    elif env=="s3":
-        local(".secret/config_local_s3.sh python manage.py collectstatic {} ".format(_args))
+    local("./run_in_env.sh .secret/local.env python manage.py collectstatic {} --settings={}.settings.{}".format(_args, DJANGO_PROJECT, env))
             
 ########################################################################
 # Installation commands
 ########################################################################
 
 @task
-def install(env="local"):
+def install():
     
-    if env=="local":
-        local(".secret/config_local.sh python manage.py syncdb")
-        local(".secret/config_local.sh python manage.py migrate")
+    local("./run_in_env.sh .secret/local.env python manage.py syncdb")
+    local("./run_in_env.sh .secret/local.env python manage.py migrate")
 
 @task
-def test(env="local"):
+def test():
     
-    if env=="local":
-        local(".secret/config_local.sh python manage.py test")
+    local("./run_in_env.sh .secret/local.env python manage.py test")
         
 def commit():
+    
     local("git add -p && git commit")
 
 @task
 def migrate(app, env="local"):
     
-    if env=="local":
-        
-        local(".secret/config_local.sh python manage.py schemamigration "+app+" --auto")
-        local(".secret/config_local.sh python manage.py migrate "+app+"")
+    local("./run_in_env.sh .secret/local.env python manage.py schemamigration "+app+" --auto")
+    local("./run_in_env.sh .secret/local.env python manage.py migrate "+app+"")
             
             
     
@@ -122,8 +109,8 @@ def heroku(action, app, branch="master", create=False):
     if action.lower()=="init":
         heroku_init(app, branch=branch, create=create)
     
-    elif action.lower()=="conf":
-        heroku_conf(app, branch=branch)
+    elif action.lower().startswith("conf"):
+        heroku_conf(app)
         
     elif action.lower()=="install":
         heroku_install(app)
@@ -166,31 +153,31 @@ def heroku_logs(app):
     
 @task    
 def heroku_migrate(app):
+    
     local("heroku run python manage.py migrate --all --app {app}".format(app=app))
         
 @task
 def heroku_conf(app):
     
     
-    with open(".secret/config_common.sh") as f:
+    with open(".secret/heroku.env") as f:
         _common = f.readlines()
     
     _confs = {}
     
     for l in _common:
-        if l.strip().startswith("export"):
-            _parts = [i.strip().replace('\\"',"__VERYSTRAGE__").replace('"','').replace("__VERYSTRAGE__",'"').decode('string_escape') for i in l[l.index("export")+len("export"):].split("=")]
+        if not l.strip().startswith("#") and not l.strip() == "":
+            #_parts = [i.strip().replace('\\"',"__VERYSTRAGE__").replace('"','').replace("__VERYSTRAGE__",'"').decode('string_escape') for i in l[l.index("export")+len("export"):].split("=")]
+            _parts = [p.strip() for p in l.split("=")]
             _confs[_parts[0]] = _parts[1] 
     
     for k in _confs.keys():
          local("heroku config:set {0}={1} --app {2}".format(k, _confs[k], app))
     
-    local("heroku config:set DJANGO_SETTINGS_MODULE={proj}.settings.heroku --app {app}".format(proj=DJANGO_PROJECT, app=app))
-    
     local("heroku config --app {0}".format(app))
     
 ########################################################################
-# Daemon commands
+# Database commands
 ########################################################################
 
 @task
@@ -216,13 +203,13 @@ def db_wipe(env="local"):
         
         if confirm("Are you sure you want to wipe the DB?"):
             print "Clearing all locks ..."
-            local(".secret/config_local.sh python manage.py clear_all")
+            local("./run_in_env.sh .secret/local.env python manage.py clear_all")
 
 def db_fill_demo(env="local"):
     
     if env=="local":
         
         print "Installing demo sensors ..."
-        local(".secret/config_local.sh python manage.py fill_demo")
+        local("./run_in_env.sh .secret/local.env python manage.py fill_demo")
     
 

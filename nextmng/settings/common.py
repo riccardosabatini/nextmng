@@ -31,7 +31,8 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'south',
-    'nextmng.main'
+    'nextmng.main',
+    #'djcelery',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -89,6 +90,10 @@ LOGGING = {
             'handlers': ['console'],
             'level': CONSOLE_LOG_LEVEL,
         },
+#         'celery.tasks': {
+#             'handlers': ['console'],
+#             'level': CONSOLE_LOG_LEVEL,
+#         },
     }
 }
 
@@ -139,4 +144,17 @@ PLOT_DATA = {
             'ymin': int(os.environ.get('PLOT_DATA_YMIN', -3)),
             'ymax': int(os.environ.get('PLOT_DATA_YMAX', 3)),
             }
+
+
+# ----------------------
+
+CELERY_ACCEPT_CONTENT  = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+
+#CELERY_RESULT_BACKEND = 'djcelery.backends.database:DatabaseBackend'
+#CELERY_BEAT_SCHEDULER = 'djcelery.schedulers.DatabaseScheduler'
+
+
+
+
 

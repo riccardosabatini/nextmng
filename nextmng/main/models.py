@@ -1,8 +1,8 @@
 from django.db import models
 from django.core.exceptions import ValidationError, FieldError
 from ..common.mixins import ValidateModelMixin
-from ..common.analytics import compute_zscores
 from ..common import logger
+from django.db import models
 
 # Get an instance of a logger
 
@@ -88,12 +88,10 @@ class Aggregation(models.Model):
     m_vegetables = models.FloatField(blank=True, null=True)
     m_sweets     = models.FloatField(blank=True, null=True)
     m_fruits     = models.FloatField(blank=True, null=True)
-    #m_stages     = models.FloatField(blank=True, null=True)
     m_positives  = models.FloatField(blank=True, null=True)
     m_salties    = models.FloatField(blank=True, null=True)
     
     def get_array(self):
-        #return [self.m_objects, self.m_vegetables, self.m_sweets, self.m_fruits, self.m_stages, self.m_positives, self.m_salties]
         return [self.m_objects, self.m_vegetables, self.m_sweets, self.m_fruits, self.m_positives, self.m_salties]
     
 class Experiment(ValidateModelMixin, models.Model):
@@ -107,106 +105,44 @@ class Experiment(ValidateModelMixin, models.Model):
     m_vegetables = models.FloatField(blank=True, null=True)
     m_sweets     = models.FloatField(blank=True, null=True)
     m_fruits     = models.FloatField(blank=True, null=True)
-    #m_stages     = models.FloatField(blank=True, null=True)
     m_positives  = models.FloatField(blank=True, null=True)
     m_salties    = models.FloatField(blank=True, null=True)
     
     def get_array(self):
-        #return [self.m_objects, self.m_vegetables, self.m_sweets, self.m_fruits, self.m_stages, self.m_positives, self.m_salties]
         return [self.m_objects, self.m_vegetables, self.m_sweets, self.m_fruits, self.m_positives, self.m_salties]
-
-    def compute_values(self):
-        
-        from django.conf import settings
-        from django.core.files.storage import default_storage as storage
-        
-        try:
-            
-            fh = storage.open(self.file.name, "r")
-            z_scores = compute_zscores(fh)
-            fh.close()
-            
-            self.m_objects    = z_scores[0] if len(z_scores)>=1 else None
-            self.m_vegetables = z_scores[1] if len(z_scores)>=2 else None
-            self.m_sweets     = z_scores[2] if len(z_scores)>=3 else None
-            self.m_fruits     = z_scores[3] if len(z_scores)>=4 else None
-            #self.m_stages     = z_scores[4] if len(z_scores)>=5 else None
-            self.m_positives  = z_scores[4] if len(z_scores)>=5 else None
-            self.m_salties    = z_scores[5] if len(z_scores)>=6 else None
-            
-            self.save()
-            
-            logger.info("Experiment correctly stored for {} with z_scores {}".format(self.subject, z_scores))
-            
-        except Exception as e:
-            
-            logger.error("Error storing experiment for {} with exception {}".format(self.subject, e))
-    
-    def generate_pdf(self):
-        
-        from ..common.analytics import generate_pdf, generate_new_pdf
-        
-        try:
-            #_f = generate_pdf(self)
-            _f = generate_new_pdf(self)
-            self.pdf_file = _f
-            self.save()
-            return True
-        except Exception as e:
-            import traceback
-            traceback.print_exc()
-
-            logger.error("Error generating pdf for {} with exception {}".format(self.subject, e))
-            return False
-    
-    
-    def send_pdf_by_mail(self):
-    
-
-#         import sendgrid
-#         from django.conf import settings
-#         sg = sendgrid.SendGridClient(settings.SENDGRID['user'], settings.SENDGRID['pass'])
-#             
-#         message = sendgrid.Mail()
-#         message.add_to(self.subject.mail)
-#         message.set_subject('FoodCAST @WiredNext - Results')
-#         message.set_text('Salve {}, siamo felici di inviarti il risultato del tuo esperimento. FoodCAST Team')
-#         message.set_from('FoodCAST <foodcast@sissa.it>')
-#         message.add_attachment('results.pdf', self.pdf_file.path)
-#         status, msg = sg.send(message)
-
-        import pystmark
-        from django.conf import settings
-        from django.core.files.storage import default_storage as storage
-        
-        try:
-            
-            message = pystmark.Message(sender=settings.POSTMASTER['sender'],
-                                       to=self.subject.mail,
-                                       subject='FoodCAST Neuroscience Experiment result',
-                                       text='Dear {},\nwe\'re happy to send you the resuts for the experiment you took part in WiredNext 2014 at the FoodCAST stand.\n\nBest regard,\nThe FoodCAST Team'.format(self.subject.name))
-
-            # Attach using filename
-            fh = storage.open(self.pdf_file.name, "r")
-            
-            message.attach_binary(fh.read(), self.pdf_file.name.split("/")[-1])
-            
-            pystmark.send(message, api_key=settings.POSTMASTER['key'])
-            
-            logger.info("Mail sent to the recipient {}".format(self.subject.mail))
-            fh.close()
-            
-            return True
-        
-        except Exception as e:
-            
-            logger.error("Cannot send a mail to the recipient {}: {}".format(self.subject.mail, e))
-            return False
         
         
 #-------------------------------------
 #         Lock
 #-------------------------------------
+
+class TaskHistory(models.Model):
+    
+    RUNNING        = 0
+    FINISHED_OK    = 1
+    FINISHED_ERROR = 3
+    
+    STATUS_CHOICES = (
+        (RUNNING,    'Running'),
+        (FINISHED_OK,  'FinishedOk'),
+        (FINISHED_ERROR,  'FinishedError'),
+    )
+    
+    name       = models.CharField(max_length=100, verbose_name="Task name")
+    created    = models.DateTimeField(auto_now_add=True, editable=False)
+    finished   = models.DateTimeField(null=True, blank=True)
+    status     = models.IntegerField(default=RUNNING, choices=STATUS_CHOICES)
+    notes      = models.TextField(blank=True, null=True)
+    
+    # Meta & unicode
+    class Meta:
+        ordering        = ["-created"]
+        get_latest_by   = "finished"
+        
+    def __unicode__(self):
+        return "Task History of Task: {}".format(self.name)
+    
+
 
 class DbLock(models.Model):
     

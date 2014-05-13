@@ -42,6 +42,8 @@ class TestSubjectAdmin(admin.ModelAdmin):
     def save_model(self, request, obj, form, change):
         
         from ..common.analytics import generate_stats
+        from .tasks import *
+        from celery import chain
         
         obj.save()
         
@@ -49,12 +51,7 @@ class TestSubjectAdmin(admin.ModelAdmin):
             obj.experiment.save()
             
             logger.info("New experimental file stored, computing values and updating statistics")
-            
-            obj.experiment.compute_values()
-            generate_stats()
-            if obj.experiment.generate_pdf():
-                if obj.send_to:
-                    obj.experiment.send_pdf_by_mail()
+            res = chain(exp_compute_values.s(obj.experiment.pk) | exp_generate_pdf.s() | exp_send_pdf_by_mail.s())()
             
 
 class AggregationAdmin(admin.ModelAdmin):
@@ -66,17 +63,10 @@ class AggregationAdmin(admin.ModelAdmin):
 admin.site.register(models.TestSubject, TestSubjectAdmin)
 admin.site.register(models.Aggregation, AggregationAdmin)
 
-
-# class ExperimentAdmin(admin.ModelAdmin):
-#     list_display = ['subject']
-# 
-# class TestSubjectAdmin(admin.ModelAdmin):
-#     list_display = ['name', 'mail', 'code', 'experiment']
-#     
-#     def get_experiments(self, obj):
-#         return '%s' % obj.experiment
-#     get_experiments.short_description = 'Experiments'
-#     
-# admin.site.register(models.Experiment, ExperimentAdmin)
-# admin.site.register(models.TestSubject, TestSubjectAdmin)
+class TaskHistoryAdminModel(admin.ModelAdmin):
+    
+    list_display = ["name","status","created"]
+    class Meta:
+        models.TaskHistory
+admin.site.register(models.TaskHistory, TaskHistoryAdminModel)
 

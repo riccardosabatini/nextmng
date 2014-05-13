@@ -39,3 +39,5 @@ wsgiref==0.1.2
 pylibmc==1.2.3
 django-pylibmc==0.5
 pystmark==0.4.4
+jsonfield==0.9.20
+django-jsonfield==0.9.12

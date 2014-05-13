@@ -1,1 +1,3 @@
+rabbit: rabbitmq-server
 web: gunicorn -b 0.0.0.0:8000 -w 1 -k sync --worker-connections=10 nextmng.wsgi:application
+celeryd: celery -A nextmng worker --loglevel=info -E

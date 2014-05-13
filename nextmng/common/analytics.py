@@ -232,7 +232,6 @@ def generate_new_pdf(experiment, format="pdf"):
     def shrink(val, perc):
         return val - val/100.0*perc
     
-    logger.info("A")
     # Figure
     # ------------
     
@@ -260,8 +259,6 @@ def generate_new_pdf(experiment, format="pdf"):
         p = patches.Rectangle((i+0.25, 0), 0.5, _user[i], fill=True, transform=ax.transData, lw=0, facecolor=_colors[i], alpha=1.0)
         ax.add_patch(p)
     
-    logger.info("B")
-      
     # Spines
     # ------------
     ax.spines['top'].set_visible(False)
@@ -335,11 +332,6 @@ def generate_new_pdf(experiment, format="pdf"):
      
         _arts_to_keep.append(imagebox)
     
-    logger.info("D")
-    
-#     plt.tight_layout()
-#     plt.draw()
-#     
     # Storing with the
     
     fname = experiment.subject.code+"."+format

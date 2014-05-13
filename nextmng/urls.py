@@ -13,3 +13,6 @@ urlpatterns = patterns('',
     url(r'^$', include('nextmng.main.urls', namespace="nextmng.main", app_name="nextmng.main")),
     
 )
+
+from django.contrib.staticfiles.urls import staticfiles_urlpatterns
+urlpatterns += staticfiles_urlpatterns()

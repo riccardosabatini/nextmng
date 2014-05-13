@@ -32,7 +32,7 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'south',
     'nextmng.main',
-    #'djcelery',
+    'djcelery',
 )
 
 MIDDLEWARE_CLASSES = (

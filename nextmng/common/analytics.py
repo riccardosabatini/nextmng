@@ -322,8 +322,7 @@ def generate_new_pdf(experiment):
         if settings.DEBUG:
             _url     = "http://localhost:8000"+static("resources/"+_icons[i])
         else:
-             _url     = settings.STATIC_URL+static("resources/"+_icons[i])
-        logger.info("Getting icon at {}".format(_url))
+             _url     = static("resources/"+_icons[i])
         
         fimg     = urllib2.urlopen(_url)
         img1     = read_png(fimg)

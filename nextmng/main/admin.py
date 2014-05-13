@@ -9,6 +9,19 @@ def resend_pdf(modeladmin, request, queryset):
         subject.experiment.send_pdf_by_mail()
 resend_pdf.short_description = "Resend the PDF"
 
+def recompute(modeladmin, request, queryset):
+    
+    from ..common.analytics import generate_stats
+    
+    for subject in queryset:
+        subject.experiment.compute_values()
+        subject.experiment.generate_pdf()
+
+    generate_stats()
+    
+recompute.short_description = "Recompute file"
+
+
 def regenerate_pdf(modeladmin, request, queryset):
     for subject in queryset:
         subject.experiment.generate_pdf()
@@ -24,7 +37,7 @@ class TestSubjectAdmin(admin.ModelAdmin):
     
     list_display = ['name', 'mail', 'code', 'experiment']
     inlines      = [ExperimentInline]
-    actions      = [resend_pdf, regenerate_pdf]
+    actions      = [resend_pdf, regenerate_pdf, recompute]
     
     def save_model(self, request, obj, form, change):
         

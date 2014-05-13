@@ -343,8 +343,8 @@ def generate_new_pdf(experiment, format="pdf"):
     # Storing with the
     
     fname = experiment.subject.code+"."+format
-    fh    = storage.open(fname, "w", format=format)
-    plt.savefig(fh)
+    fh    = storage.open(fname, "w")
+    plt.savefig(fh, format=format)
     fh.close()
     
     return fname

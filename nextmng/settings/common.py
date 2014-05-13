@@ -128,11 +128,15 @@ APPEND_SLASH = False
 # various locations.
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
-    #'django.contrib.staticfiles.finders.FileSystemFinder',
+    'django.contrib.staticfiles.finders.FileSystemFinder',
 )
 
-# STATICFILES_DIRS = (
-#     # XXX uncomment this when re-enabilng the mobile app
-#     ('static', BASE_DIR, '..', '..')),
-# )
+STATICFILES_DIRS = (
+    ("resources", os.path.join(BASE_DIR, '..', 'resources')),
+)
+
+PLOT_DATA = {
+            'ymin': int(os.environ.get('PLOT_DATA_YMIN', -3)),
+            'ymax': int(os.environ.get('PLOT_DATA_YMAX', 3)),
+            }
 

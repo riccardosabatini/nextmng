@@ -17,7 +17,8 @@ regenerate_pdf.short_description = "Rebuild the PDF"
 class ExperimentInline(admin.StackedInline):
     
     model           = models.Experiment
-    readonly_fields = ['pdf_file', 'm_objects', 'm_vegetables', 'm_sweets', 'm_fruits', 'm_stages', 'm_positives', 'm_salties']
+    #readonly_fields = ['pdf_file', 'm_objects', 'm_vegetables', 'm_sweets', 'm_fruits', 'm_stages', 'm_positives', 'm_salties']
+    readonly_fields = ['pdf_file', 'm_objects', 'm_vegetables', 'm_sweets', 'm_fruits', 'm_positives', 'm_salties']
     
 class TestSubjectAdmin(admin.ModelAdmin):
     
@@ -46,7 +47,8 @@ class TestSubjectAdmin(admin.ModelAdmin):
 class AggregationAdmin(admin.ModelAdmin):
 
     list_display    = ['operation']
-    readonly_fields = ['m_objects', 'm_vegetables', 'm_sweets', 'm_fruits', 'm_stages', 'm_positives', 'm_salties']
+    #readonly_fields = ['m_objects', 'm_vegetables', 'm_sweets', 'm_fruits', 'm_stages', 'm_positives', 'm_salties']
+    readonly_fields = ['m_objects', 'm_vegetables', 'm_sweets', 'm_fruits', 'm_positives', 'm_salties']
     
 admin.site.register(models.TestSubject, TestSubjectAdmin)
 admin.site.register(models.Aggregation, AggregationAdmin)

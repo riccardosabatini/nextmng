@@ -88,12 +88,13 @@ class Aggregation(models.Model):
     m_vegetables = models.FloatField(blank=True, null=True)
     m_sweets     = models.FloatField(blank=True, null=True)
     m_fruits     = models.FloatField(blank=True, null=True)
-    m_stages     = models.FloatField(blank=True, null=True)
+    #m_stages     = models.FloatField(blank=True, null=True)
     m_positives  = models.FloatField(blank=True, null=True)
     m_salties    = models.FloatField(blank=True, null=True)
     
     def get_array(self):
-        return [self.m_objects, self.m_vegetables, self.m_sweets, self.m_fruits, self.m_stages, self.m_positives, self.m_salties]
+        #return [self.m_objects, self.m_vegetables, self.m_sweets, self.m_fruits, self.m_stages, self.m_positives, self.m_salties]
+        return [self.m_objects, self.m_vegetables, self.m_sweets, self.m_fruits, self.m_positives, self.m_salties]
     
 class Experiment(ValidateModelMixin, models.Model):
     
@@ -106,13 +107,14 @@ class Experiment(ValidateModelMixin, models.Model):
     m_vegetables = models.FloatField(blank=True, null=True)
     m_sweets     = models.FloatField(blank=True, null=True)
     m_fruits     = models.FloatField(blank=True, null=True)
-    m_stages     = models.FloatField(blank=True, null=True)
+    #m_stages     = models.FloatField(blank=True, null=True)
     m_positives  = models.FloatField(blank=True, null=True)
     m_salties    = models.FloatField(blank=True, null=True)
     
     def get_array(self):
-        return [self.m_objects, self.m_vegetables, self.m_sweets, self.m_fruits, self.m_stages, self.m_positives, self.m_salties]
-    
+        #return [self.m_objects, self.m_vegetables, self.m_sweets, self.m_fruits, self.m_stages, self.m_positives, self.m_salties]
+        return [self.m_objects, self.m_vegetables, self.m_sweets, self.m_fruits, self.m_positives, self.m_salties]
+
     def compute_values(self):
         
         from django.conf import settings
@@ -128,9 +130,9 @@ class Experiment(ValidateModelMixin, models.Model):
             self.m_vegetables = z_scores[1] if len(z_scores)>=2 else None
             self.m_sweets     = z_scores[2] if len(z_scores)>=3 else None
             self.m_fruits     = z_scores[3] if len(z_scores)>=4 else None
-            self.m_stages     = z_scores[4] if len(z_scores)>=5 else None
-            self.m_positives  = z_scores[5] if len(z_scores)>=6 else None
-            self.m_salties    = z_scores[6] if len(z_scores)>=7 else None
+            #self.m_stages     = z_scores[4] if len(z_scores)>=5 else None
+            self.m_positives  = z_scores[4] if len(z_scores)>=5 else None
+            self.m_salties    = z_scores[5] if len(z_scores)>=6 else None
             
             self.save()
             
@@ -142,15 +144,18 @@ class Experiment(ValidateModelMixin, models.Model):
     
     def generate_pdf(self):
         
-        from ..common.analytics import generate_pdf
+        from ..common.analytics import generate_pdf, generate_new_pdf
         
         try:
-            _f = generate_pdf(self)
+            #_f = generate_pdf(self)
+            _f = generate_new_pdf(self)
             self.pdf_file = _f
             self.save()
             return True
         except Exception as e:
-            
+            import traceback
+            traceback.print_exc()
+
             logger.error("Error generating pdf for {} with exception {}".format(self.subject, e))
             return False
     

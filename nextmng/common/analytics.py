@@ -168,7 +168,7 @@ def generate_pdf(experiment):
     return fname
 
 
-def generate_new_pdf(experiment):
+def generate_new_pdf(experiment, format="pdf"):
 
     # This is a demo of creating a pdf file with several pages.
     
@@ -341,8 +341,12 @@ def generate_new_pdf(experiment):
 #     plt.draw()
 #     
     # Storing with the
-    fname = experiment.subject.code+".pdf"
-    fh    = storage.open(fname, "w")
-    fig.savefig(fh, format='pdf')
+    
+    fname = experiment.subject.code+"."+format
+    fh    = storage.open(fname, "w", format=format)
+    plt.savefig(fh)
     fh.close()
+    
+    return fname
+
     

@@ -41,3 +41,6 @@ django-pylibmc==0.5
 pystmark==0.4.4
 jsonfield==0.9.20
 django-jsonfield==0.9.12
+Markdown==2.4
+django-filter==0.7
+supervisor==3.0

@@ -5,6 +5,7 @@ from fabric.contrib import django
 # ------------------------------
 #   Fabric management functions
 # ------------------------------
+HEROKU_APP     = 'foodcast-next'
 DJANGO_PROJECT = 'nextmng'
 django.project(DJANGO_PROJECT)
 
@@ -47,17 +48,19 @@ def booleanize(value):
 ########################################################################
 
 @task
-def shell():
+def shell(env="local"):
     
-    local("./run_in_env.sh .secret/local.env python manage.py shell")
+    local("./run_in_env.sh .secret/local.env python manage.py shell --settings={}.settings.{}".format(DJANGO_PROJECT, env))
 
 
 @task
-def runserver(type="django"):
+def runserver(type="django",env="local"):
     
     if type.startswith("dj"):
-        local("./run_in_env.sh .secret/local.env python manage.py runserver")
+        local("./run_in_env.sh .secret/local.env python manage.py runserver --settings={}.settings.{}".format(DJANGO_PROJECT, env))
     elif type.startswith("gu"):
+        with settings(warn_only=True):
+            local("kill -9 `ps aux | grep epmd | awk '{print $2}'`")
         local("./run_in_env.sh .secret/local.env foreman start -f Procfile.local")
 
 
@@ -104,60 +107,60 @@ def migrate(app, env="local"):
 ########################################################################
 
 @task
-def heroku(action, app, branch="master", create=False):
+def heroku(action, app=HEROKU_APP, branch="master", create=False):
     
     if action.lower()=="init":
-        heroku_init(app, branch=branch, create=create)
+        heroku_init(app=app, branch=branch, create=create)
     
     elif action.lower().startswith("conf"):
-        heroku_conf(app)
+        heroku_conf(app=app)
         
     elif action.lower()=="install":
-        heroku_install(app)
+        heroku_install(app=app)
     
     elif action.lower()=="migrate":
-        heroku_migrate(app)
+        heroku_migrate(app=app)
         
     elif action.lower()=="push":
-        heroku_push(app, branch=branch)
+        heroku_push(app=app, branch=branch)
     
     elif action.lower()=="logs":
-        heroku_logs(app)
+        heroku_logs(app=app)
     
 @task
-def heroku_init(app, branch="master", create=False):
+def heroku_init(app=HEROKU_APP, branch="master", create=False):
 
     if booleanize(create):
         local("heroku apps:create {app} -s cedar".format(app=app, branch=branch))
         local("git remote add {app} git@heroku.com:{app}.git".format(app=app))
         
-    heroku_conf(app)
-    heroku_push(app, branch=branch)
-    heroku_install(app)
+    heroku_conf(app=app)
+    heroku_push(app=app, branch=branch)
+    heroku_install(app=app)
     
 @task
-def heroku_push(app, branch="master"):
+def heroku_push(app=HEROKU_APP, branch="master"):
     
     local("git push {app} {branch}".format(app=app, branch=branch))
 
 @task
-def heroku_install(app):
+def heroku_install(app=HEROKU_APP):
          
     local("heroku run python manage.py syncdb --app {app}".format(app=app))
-    heroku_migrate(app)
+    heroku_migrate(app=app)
 
 @task
-def heroku_logs(app):
+def heroku_logs(app=HEROKU_APP):
          
     local("heroku logs --app {app}".format(app=app))
     
 @task    
-def heroku_migrate(app):
+def heroku_migrate(app=HEROKU_APP):
     
     local("heroku run python manage.py migrate --all --app {app}".format(app=app))
         
 @task
-def heroku_conf(app):
+def heroku_conf(app=HEROKU_APP):
     
     
     with open(".secret/heroku.env") as f:

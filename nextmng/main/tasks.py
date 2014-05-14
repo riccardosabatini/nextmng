@@ -1,8 +1,16 @@
 from __future__ import absolute_import
 from celery import shared_task, Task, task
-from ..common.analytics import compute_zscores
+from celery.task import PeriodicTask
+from ..common.analytics import compute_zscores, generate_stats
 from ..common import logger
 from ..main.models import Experiment, TaskHistory
+from django.core.management import call_command
+from datetime import timedelta
+from celery.utils.log import get_task_logger
+from django.core.cache import cache
+
+LOCK_EXPIRE = 60 * 15 # Lock expires in 5 minutes
+
 
 #--------------------------------------------
 # Wrapper class
@@ -61,16 +69,21 @@ def exp_compute_values(pk):
         z_scores = compute_zscores(fh)
         fh.close()
         
-        exp.m_objects    = z_scores[0] if len(z_scores)>=1 else None
-        exp.m_vegetables = z_scores[1] if len(z_scores)>=2 else None
-        exp.m_sweets     = z_scores[2] if len(z_scores)>=3 else None
-        exp.m_fruits     = z_scores[3] if len(z_scores)>=4 else None
-        exp.m_positives  = z_scores[4] if len(z_scores)>=5 else None
-        exp.m_salties    = z_scores[5] if len(z_scores)>=6 else None
+        def get_field(arr, n):
+            return arr[n] if len(arr)>=n+1 else None
+            
+        exp.m_fruits     = get_field(z_scores, 1)
+        exp.m_salties    = get_field(z_scores, 2)
+        exp.m_positives  = get_field(z_scores, 3)
+        exp.m_sweets     = get_field(z_scores, 4)
+        exp.m_objects    = get_field(z_scores, 5)
+        exp.m_vegetables = get_field(z_scores, 6)
         
         exp.save()
+        logger.info("Experiment z_scores correctly computed for {}".format(exp.subject))
         
-        logger.info("Experiment correctly stored for {} with z_scores {}".format(exp.subject, z_scores))
+        generate_stats()
+        logger.info("Statistics correctly updated")
         
         return pk
         
@@ -102,31 +115,18 @@ def exp_generate_pdf(pk):
 def exp_send_pdf_by_mail(pk):
 
 
-    import pystmark
-    from django.conf import settings
-    from django.core.files.storage import default_storage as storage
+    from ..common.analytics import send_pdf_by_mail
+    from django.utils.timezone import utc
+    import datetime
     
     try:
         
         exp = Experiment.objects.get(pk=pk)
         
-        if not exp.subject.send_to:
-            return pk
+        send_pdf_by_mail(exp)
         
-        message = pystmark.Message(sender=settings.POSTMASTER['sender'],
-                                   to=exp.subject.mail,
-                                   subject='FoodCAST Neuroscience Experiment result',
-                                   text='Dear {},\nwe\'re happy to send you the resuts for the experiment you took part in WiredNext 2014 at the FoodCAST stand.\n\nBest regard,\nThe FoodCAST Team'.format(exp.subject.name))
-
-        # Attach using filename
-        fh = storage.open(exp.pdf_file.name, "r")
-        
-        message.attach_binary(fh.read(), exp.pdf_file.name.split("/")[-1])
-        
-        pystmark.send(message, api_key=settings.POSTMASTER['key'])
-        
-        logger.info("Mail sent to the recipient {}".format(exp.subject.mail))
-        fh.close()
+        exp.subject.sent = datetime.datetime.utcnow().replace(tzinfo=utc)
+        exp.subject.save()
         
         return pk
     
@@ -134,5 +134,35 @@ def exp_send_pdf_by_mail(pk):
         
         logger.error("Cannot send a mail to the recipient {}: {}".format(exp.subject.mail, e))
         raise
+
+
+
+@task
+def check_deposit_task():
     
+    from nextmng.common.importer import import_depot
+    
+    logger.info('Check deposit started')
+    
+    # The cache key consists of the task name and the MD5 digest
+    # of the feed URL.
+    lock_id = '{0}-lock'.format("check_deposit_task")
+
+    # cache.add fails if if the key already exists
+    acquire_lock = lambda: cache.add(lock_id, 'true', LOCK_EXPIRE)
+    # memcache delete is very slow, but we have to use it to take
+    # advantage of using add() for atomic locking
+    release_lock = lambda: cache.delete(lock_id)
+    
+    _imported    = 0
+    
+    if acquire_lock():
+        try:
+            _imported = import_depot()
+        finally:
+            release_lock()
+            logger.info('Check deposit is finished')
+        return _imported
+
+    logger.info('Check deposit is already running by another worker')
     

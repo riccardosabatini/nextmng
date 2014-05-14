@@ -15,6 +15,7 @@ class TestSubject(ValidateModelMixin, models.Model):
     mail       = models.EmailField('Subject email', unique=True)
     registered = models.DateTimeField(auto_now_add=True, editable=False)
     send_to    = models.BooleanField(default=False)
+    sent       = models.DateTimeField(null=True, blank=True)
     
     code       = models.CharField('Registration code', max_length=CODE_LEN, unique=True)
     
@@ -84,32 +85,34 @@ class Aggregation(models.Model):
     
     operation    = models.CharField('Operation done', max_length=500, blank=False)
     
+    m_fruits     = models.FloatField(blank=True, null=True)
+    m_salties    = models.FloatField(blank=True, null=True)
+    m_positives  = models.FloatField(blank=True, null=True)
+    m_sweets     = models.FloatField(blank=True, null=True)
     m_objects    = models.FloatField(blank=True, null=True)
     m_vegetables = models.FloatField(blank=True, null=True)
-    m_sweets     = models.FloatField(blank=True, null=True)
-    m_fruits     = models.FloatField(blank=True, null=True)
-    m_positives  = models.FloatField(blank=True, null=True)
-    m_salties    = models.FloatField(blank=True, null=True)
+    
+    
     
     def get_array(self):
-        return [self.m_objects, self.m_vegetables, self.m_sweets, self.m_fruits, self.m_positives, self.m_salties]
+        return [self.m_fruits, self.m_salties, self.m_positives, self.m_sweets, self.m_objects, self.m_vegetables]
     
 class Experiment(ValidateModelMixin, models.Model):
     
     subject    = models.OneToOneField(TestSubject, related_name='experiment')
     executed   = models.DateTimeField(auto_now_add=True, editable=False)
-    file       = models.FileField(upload_to='files/%Y/%m/%d')
+    file       = models.FileField(upload_to='files/%Y/%m/%d', blank=True)
     pdf_file   = models.FileField(blank=True, null=True, upload_to='not_used')
     
+    m_fruits     = models.FloatField(blank=True, null=True)
+    m_salties    = models.FloatField(blank=True, null=True)
+    m_positives  = models.FloatField(blank=True, null=True)
+    m_sweets     = models.FloatField(blank=True, null=True)
     m_objects    = models.FloatField(blank=True, null=True)
     m_vegetables = models.FloatField(blank=True, null=True)
-    m_sweets     = models.FloatField(blank=True, null=True)
-    m_fruits     = models.FloatField(blank=True, null=True)
-    m_positives  = models.FloatField(blank=True, null=True)
-    m_salties    = models.FloatField(blank=True, null=True)
     
     def get_array(self):
-        return [self.m_objects, self.m_vegetables, self.m_sweets, self.m_fruits, self.m_positives, self.m_salties]
+        return [self.m_fruits, self.m_salties, self.m_positives, self.m_sweets, self.m_objects, self.m_vegetables]
         
         
 #-------------------------------------

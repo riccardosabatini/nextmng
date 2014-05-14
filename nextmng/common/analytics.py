@@ -84,7 +84,6 @@ def generate_stats():
         _avg_agg.m_vegetables = Experiment.objects.filter(m_vegetables__isnull=False).aggregate(Avg('m_vegetables')).values()[0]
         _avg_agg.m_sweets     = Experiment.objects.filter(m_sweets__isnull=False).aggregate(Avg('m_sweets')).values()[0]
         _avg_agg.m_fruits     = Experiment.objects.filter(m_fruits__isnull=False).aggregate(Avg('m_fruits')).values()[0]
-        #_avg_agg.m_stages     = Experiment.objects.filter(m_stages__isnull=False).aggregate(Avg('m_stages')).values()[0]
         _avg_agg.m_positives  = Experiment.objects.filter(m_positives__isnull=False).aggregate(Avg('m_positives')).values()[0]
         _avg_agg.m_salties    = Experiment.objects.filter(m_salties__isnull=False).aggregate(Avg('m_salties')).values()[0]
         
@@ -98,7 +97,6 @@ def generate_stats():
         _avg_std.m_vegetables = Experiment.objects.filter(m_vegetables__isnull=False).aggregate(StdDev('m_vegetables')).values()[0]
         _avg_std.m_sweets     = Experiment.objects.filter(m_sweets__isnull=False).aggregate(StdDev('m_sweets')).values()[0]
         _avg_std.m_fruits     = Experiment.objects.filter(m_fruits__isnull=False).aggregate(StdDev('m_fruits')).values()[0]
-        #_avg_std.m_stages     = Experiment.objects.filter(m_stages__isnull=False).aggregate(StdDev('m_stages')).values()[0]
         _avg_std.m_positives  = Experiment.objects.filter(m_positives__isnull=False).aggregate(StdDev('m_positives')).values()[0]
         _avg_std.m_salties    = Experiment.objects.filter(m_salties__isnull=False).aggregate(StdDev('m_salties')).values()[0]
         
@@ -341,4 +339,43 @@ def generate_new_pdf(experiment, format="pdf"):
     
     return fname
 
+
+def send_pdf_by_mail(exp, force=False):
+    
+    import pystmark
+    from django.conf import settings
+    from django.core.files.storage import default_storage as storage
+    
+    
+    if not exp.subject.send_to: 
+        logger.info("The user di not allow to send e-mail at {}".format(exp.subject.mail))
+        return False
+    
+    if exp.subject.sent is not None and not force:
+        logger.info("Mail already sent to the recipient {}".format(exp.subject.mail))
+        return False
+    
+    try:
+        message = pystmark.Message(sender=settings.POSTMASTER['sender'],
+                                   to=exp.subject.mail,
+                                   subject='FoodCAST Neuroscience Experiment result',
+                                   text='Dear {},\nwe\'re happy to send you the resuts for the experiment you took part in WiredNext 2014 at the FoodCAST stand.\n\nBest regard,\nThe FoodCAST Team'.format(exp.subject.name))
+    
+        # Attach using filename
+        fh = storage.open(exp.pdf_file.name, "r")
+        
+        message.attach_binary(fh.read(), exp.pdf_file.name.split("/")[-1])
+        
+        pystmark.send(message, api_key=settings.POSTMASTER['key'])
+        
+        logger.info("Mail sent to the recipient {}".format(exp.subject.mail))
+        fh.close()
+        
+        return True
+    
+    except Exception as e:
+        
+        raise
+    
+    
     

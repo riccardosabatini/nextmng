@@ -32,4 +32,4 @@ MEDIA_URL = 'https://%s.s3.amazonaws.com/%s/' % (AWS_STORAGE_BUCKET_NAME,BOTO_ME
 
 # static assets
 BOTO_STATIC_LOCATION   = 'static' # this only impacts unversioned storagee
-STATIC_URL = 'https://%s.s3.amazonaws.com/%s/' % (AWS_STORAGE_BUCKET_NAME,BOTO_MEDIA_LOCATION)
+STATIC_URL = 'https://%s.s3.amazonaws.com/%s/' % (AWS_STORAGE_BUCKET_NAME,BOTO_STATIC_LOCATION)

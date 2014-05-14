@@ -65,3 +65,19 @@ POSTMASTER = {
             'sender': os.environ.get('POSTMARK_SENDER'),
             }
 
+DEPOT_DIR  = os.environ.get("DEPOT_DIR", None)
+
+
+# ------------------------------------
+#    Celery
+# ------------------------------------
+from datetime import timedelta
+
+CELERYBEAT_SCHEDULE = {
+    'check-deposit-task': {
+        'task': 'nextmng.main.tasks.check_deposit_task',
+        'schedule': timedelta(seconds=10),
+    },
+}
+
+CELERY_TIMEZONE = 'UTC'

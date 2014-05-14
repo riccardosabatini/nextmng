@@ -1,0 +1,125 @@
+<html>
+ 
+  <head>   
+   
+    <link href="css/basic.css" type="text/css" rel="stylesheet" />
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script src="js/dropzone.min.js"></script>
+
+    <script>
+
+      //Dropzone.autoDiscover = false;
+
+      var zone   = $('div#dropzone');
+      var bucket = "nextmng";
+      var auth_server = "http://localhost:8000";
+
+
+      Dropzone.options.myZone = {
+
+          paramname: 'pic',
+          autoProcessQueue: true,
+          //clickable: true,
+          maxfiles: 5,
+          parallelUploads: 2,
+          maxFilesize: 7, // in mb
+          maxThumbnailFilesize: 8, // 3MB
+          //acceptedMimeTypes: "image/bmp,image/gif,image/jpg,image/jpeg,image/png",
+          url: 'https://s3.amazonaws.com/'+bucket,
+
+          init: function()
+          {
+          },
+          // addedfile: function(file)
+          // {
+          //     var tpl = twig({href: '/bundles/acmecontent/js/template/image_upload.html.twig', async:false});
+          //     file.template = $(tpl.render());
+          //     $(this.previewsContainer).append(file.template);
+          //     file.template.find(".filename span").text(file.name);
+          //     file.template.find("#filename").html(file.name);
+          //     return file.template.find("#filesize").html(this.filesize(file.size));
+          // },
+          accept: function(file, done)
+          {
+              file.postData = [];
+              $.ajax({
+                  url: auth_server+'/prepare-upload?name='+file.name,
+                  data: {name: file.name, type: file.type, size: file.size},
+                  type: 'POST',
+                  success: function(response)
+                  {
+                      file.custom_status = 'ready';
+                      file.postData = response.post;
+                      file.guid = response.data.guid;
+                      file.s3 = response.post.key;
+                      $(file.previewTemplate).addClass('uploading');
+                      done();
+                  },
+                  error: function(response)
+                  {
+                      file.custom_status = 'rejected';
+
+                      if (response.responseText) {
+                          response = parseJsonMsg(response.responseText);
+                      }
+                      if (response.message) {
+                          done(response.message);
+                      } else {
+                          done('error preparing the upload');
+                      }
+                  }
+              });
+          },
+          sending: function(file, xhr, formData)
+          {
+              $.each(file.postData, function(k, v){
+                  formData.append(k, v);
+              });
+          },
+          // thumbnail: function(file, dataUrl) {
+          //     file.template.removeClass("file-preview").addClass("image-preview");
+          //     return file.template.find(".details img").attr('alt', file.name).attr('src', dataUrl);
+          // },
+          // processingfile: function(file) {
+          //     return file.template.addClass("processing");
+          // },
+          // uploadprogress: function(file, progress) {
+          //     return file.template.find(".progress .upload").css({
+          //         width: "" + progress + "%"
+          //     });
+          // },
+          success: function(file, serverResponse, event) {
+              var _this = this;
+              file.template.find('.status_message .inputImage').val(serverResponse.file_name);
+
+              file.template.find('.btn-delete').on('click', function(){
+                  _this.removeFile(file);
+              });
+
+              return file.template.addClass("done");
+          },
+          // removedfile: function(file) {
+          //     var _this = this;
+          //     return file.template.fadeOut('fast', function(){
+          //         this.remove();
+          //     });
+          // },
+          error: function(file, response) {
+              alert(response);
+              response = $.parseJSON(response);
+              file.template.addClass("error");
+              return file.template.find(".error-message span").html(response.message);
+          }
+      };
+      
+    </script>     
+
+  </head>
+ 
+  <body>
+   
+    <div id="myZone" class="dropzone">DropHere</div>
+ 
+  </body>
+ 
+</html>

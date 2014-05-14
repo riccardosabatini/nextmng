@@ -33,6 +33,7 @@ INSTALLED_APPS = (
     'south',
     'nextmng.main',
     'djcelery',
+    'rest_framework',
 )
 
 MIDDLEWARE_CLASSES = (

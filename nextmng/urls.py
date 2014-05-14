@@ -12,6 +12,9 @@ urlpatterns = patterns('',
     
     url(r'^$', include('nextmng.main.urls', namespace="nextmng.main", app_name="nextmng.main")),
     
+    # REST API
+    url(r'^api/', include('nextmng.urls_api', namespace='next_api')),
+    
 )
 
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns

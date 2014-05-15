@@ -1,5 +1,4 @@
 from django.conf.urls import patterns, include, url
-
 from django.contrib import admin
 admin.autodiscover()
 
@@ -10,10 +9,11 @@ urlpatterns = patterns('',
 
     url(r'^admin/', include(admin.site.urls)),
     
-    url(r'^$', include('nextmng.main.urls', namespace="nextmng.main", app_name="nextmng.main")),
-    
     # REST API
     url(r'^api/', include('nextmng.urls_api', namespace='next_api')),
+
+    # All
+    url('', include('nextmng.main.urls', namespace="nextmng.main", app_name="nextmng.main")),
     
 )
 

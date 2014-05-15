@@ -194,9 +194,9 @@ def generate_new_pdf(experiment, format="pdf"):
     
     
     # Parameters
-    
-    _icons      = ['objects.png', 'vegetables.png', 'sweets.png', 'fruit.png', 'sets.png', 'salties.png']
-    _colors     = ['#FFD136', '#A1D5D4', '#4788AE', '#D4516D', '#DD8907', '#86B469']
+    #             ['fruit.png', 'salties.png', 'sets.png', 'sweets.png', 'objects.png', 'vegetables.png']
+    _icons      = ['fruit.png', 'salties.png', 'sets.png', 'sweets.png', 'objects.png', 'vegetables.png']
+    _colors     = ['#D4516D', '#86B469', '#DD8907', '#4788AE', '#FFD136', '#A1D5D4']
     _color_gray = '#D9D9D9'
     _grid_gray  = '#999999'
     
@@ -248,6 +248,10 @@ def generate_new_pdf(experiment, format="pdf"):
     # ------------
     ax = plt.subplot(gs[0])
     
+    t = plt.title('Utente '+experiment.subject.code, fontsize=40, color=_grid_gray)
+    t.set_y(1.09) 
+    plt.subplots_adjust(top=0.86) 
+
     # Plot data
     for i in range(len(_user)):
         p = patches.Rectangle((i+0.125, 0), 0.75, _all[i], fill=True, transform=ax.transData, lw=0, facecolor=_color_gray, alpha=0.75)
@@ -290,10 +294,20 @@ def generate_new_pdf(experiment, format="pdf"):
     ax.set_ylim(ymin, ymax)
     ax.set_xlim(xmin, xmax)
     
+    # Legend
+    # ------------
+    _all_circle  = plt.Line2D([0], [0], linestyle="none", marker="o", markersize=20, markerfacecolor=_color_gray)
+    _user_circle = plt.Line2D([0], [0], linestyle="none", c=_colors[3], marker="o", markersize=20, markerfacecoloralt=_colors[0], fillstyle='right')
+    legend       = ax.legend([_all_circle,_user_circle], ['Media utenti', 'Personale'], numpoints=1, loc="upper right")
+    legend.draw_frame(False) 
+    
+    for label in legend.get_texts():
+        label.set_fontsize(18)
+        label.set_color(_grid_gray)
+    
+
     # Sub chart
     # ------------
-    
-    
     ax1 = plt.subplot(gs[1])
     ax1.set_ylim(ymin, ymax)
     ax1.set_xlim(xmin, xmax)
